@@ -14,8 +14,21 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class BookController extends Controller
 {
-    public function index(){
-        $data['books'] = Book::with('bookshelf')->get();
+    public function index(Request $request)
+    {
+        $query = Book::with('bookshelf');
+
+        if ($request->has('search') && $request->search != '') {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                ->orWhere('author', 'like', "%{$search}%")
+                ->orWhere('publisher', 'like', "%{$search}%");
+            });
+        }
+
+        $data['books'] = $query->paginate(10);
+
         return view('books.index', $data);
     }
 
